@@ -4,68 +4,98 @@ import (
 	"fmt"
 )
 
-func makeLeaf(symbol string, weight int) []interface{} {
-	return []interface{}{"leaf", symbol, weight}
+type Node interface{}
+
+type Leaf struct {
+	Symbol string
+	Weight int
 }
 
-func isLeaf(object []interface{}) bool {
-	return object[0] == "leaf"
+type CodeTree struct {
+	Left    Node
+	Right   Node
+	Symbols []string
+	Weight  int
 }
 
-func symbolLeaf(x []interface{}) string {
-	return x[1].(string)
+func makeLeaf(symbol string, weight int) Node {
+	return &Leaf{Symbol: symbol, Weight: weight}
 }
 
-func weightLeaf(x []interface{}) int {
-	return x[2].(int)
+func isLeaf(object Node) bool {
+	_, ok := object.(*Leaf)
+	return ok
 }
 
-func makeCodeTree(left []interface{}, right []interface{}) []interface{} {
-	return []interface{}{"code_tree", left, right, append(symbols(left), symbols(right)...), weight(left) + weight(right)}
+func symbolLeaf(x Node) string {
+	leaf := x.(*Leaf)
+	return leaf.Symbol
 }
 
-func leftBranch(tree []interface{}) []interface{} {
-	return tree[1].([]interface{})
+func weightLeaf(x Node) int {
+	leaf := x.(*Leaf)
+	return leaf.Weight
 }
 
-func rightBranch(tree []interface{}) []interface{} {
-	return tree[2].([]interface{})
-}
+func makeCodeTree(left, right Node) Node {
+	leftSymbols := symbols(left)
+	rightSymbols := symbols(right)
+	combinedSymbols := append(leftSymbols, rightSymbols...)
 
-func symbols(tree []interface{}) []interface{} {
-	if isLeaf(tree) {
-		return []interface{}{symbolLeaf(tree)}
-	} else {
-		return tree[3].([]interface{})
+	return &CodeTree{
+		Left:    left,
+		Right:   right,
+		Symbols: combinedSymbols,
+		Weight:  weight(left) + weight(right),
 	}
 }
 
-func weight(tree []interface{}) int {
+func leftBranch(tree Node) Node {
+	codeTree := tree.(*CodeTree)
+	return codeTree.Left
+}
+
+func rightBranch(tree Node) Node {
+	codeTree := tree.(*CodeTree)
+	return codeTree.Right
+}
+
+func symbols(tree Node) []string {
+	if isLeaf(tree) {
+		return []string{symbolLeaf(tree)}
+	} else {
+		codeTree := tree.(*CodeTree)
+		return codeTree.Symbols
+	}
+}
+
+func weight(tree Node) int {
 	if isLeaf(tree) {
 		return weightLeaf(tree)
 	} else {
-		return tree[4].(int)
+		codeTree := tree.(*CodeTree)
+		return codeTree.Weight
 	}
 }
 
-func decode(bits []int, tree []interface{}) []interface{} {
-	var decode1 func(bits []int, currentBranch []interface{}) []interface{}
-	decode1 = func(bits []int, currentBranch []interface{}) []interface{} {
+func decodeBits(bits []int, tree Node) []string {
+	var decode func(bits []int, currentBranch Node) []string
+	decode = func(bits []int, currentBranch Node) []string {
 		if len(bits) == 0 {
 			return nil
 		} else {
 			nextBranch := chooseBranch(bits[0], currentBranch)
 			if isLeaf(nextBranch) {
-				return append([]interface{}{symbolLeaf(nextBranch)}, decode1(bits[1:], tree)...)
+				return append([]string{symbolLeaf(nextBranch)}, decode(bits[1:], tree)...)
 			} else {
-				return decode1(bits[1:], nextBranch)
+				return decode(bits[1:], nextBranch)
 			}
 		}
 	}
-	return decode1(bits, tree)
+	return decode(bits, tree)
 }
 
-func chooseBranch(bit int, branch []interface{}) []interface{} {
+func chooseBranch(bit int, branch Node) Node {
 	if bit == 0 {
 		return leftBranch(branch)
 	} else if bit == 1 {
@@ -76,14 +106,31 @@ func chooseBranch(bit int, branch []interface{}) []interface{} {
 }
 
 func main() {
-	// Test Huffman coding
+	// Example 1: Huffman coding
 	leafA := makeLeaf("A", 5)
 	leafB := makeLeaf("B", 2)
 	leafC := makeLeaf("C", 1)
 	tree := makeCodeTree(makeCodeTree(leafA, leafB), leafC)
 
 	bits := []int{0, 1, 1, 0, 1, 0, 0, 1, 0}
-	decoded := decode(bits, tree)
+	decoded := decodeBits(bits, tree)
 
+	fmt.Println("Example 1:")
+	fmt.Println("Encoded bits:", bits)
 	fmt.Println("Decoded symbols:", decoded)
+	fmt.Println()
+
+	// Example 2: Huffman coding
+	leafX := makeLeaf("X", 3)
+	leafY := makeLeaf("Y", 2)
+	leafZ := makeLeaf("Z", 1)
+	tree2 := makeCodeTree(makeCodeTree(leafX, leafY), leafZ)
+
+	bits2 := []int{1, 0, 0, 1, 0, 1, 0}
+	decoded2 := decodeBits(bits2, tree2)
+
+	fmt.Println("Example 2:")
+	fmt.Println("Encoded bits:", bits2)
+	fmt.Println("Decoded symbols:", decoded2)
+	fmt.Println()
 }
