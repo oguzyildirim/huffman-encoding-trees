@@ -1,42 +1,51 @@
+// Package main demonstrates Huffman coding algorithm.
 package main
 
 import (
 	"fmt"
 )
 
+// Node represents a generic node in the code tree.
 type Node interface{}
 
+// Leaf represents a leaf node in the code tree.
 type Leaf struct {
-	Symbol string
-	Weight int
+	Symbol string // Symbol associated with the leaf node.
+	Weight int    // Weight (frequency) of the symbol.
 }
 
+// CodeTree represents the Huffman code tree.
 type CodeTree struct {
-	Left    Node
-	Right   Node
-	Symbols []string
-	Weight  int
+	Left    Node     // Left branch of the tree.
+	Right   Node     // Right branch of the tree.
+	Symbols []string // Symbols associated with the tree.
+	Weight  int      // Weight (sum of weights of symbols) of the tree.
 }
 
+// makeLeaf creates a new leaf node with the given symbol and weight.
 func makeLeaf(symbol string, weight int) Node {
 	return &Leaf{Symbol: symbol, Weight: weight}
 }
 
+// isLeaf checks if the given node is a leaf node.
 func isLeaf(object Node) bool {
 	_, ok := object.(*Leaf)
 	return ok
 }
 
+// symbolLeaf returns the symbol associated with the leaf node.
 func symbolLeaf(x Node) string {
 	leaf := x.(*Leaf)
 	return leaf.Symbol
 }
 
+// weightLeaf returns the weight associated with the leaf node.
 func weightLeaf(x Node) int {
 	leaf := x.(*Leaf)
 	return leaf.Weight
 }
 
+// makeCodeTree creates a new code tree by combining two nodes (trees).
 func makeCodeTree(left, right Node) Node {
 	leftSymbols := symbols(left)
 	rightSymbols := symbols(right)
@@ -50,16 +59,19 @@ func makeCodeTree(left, right Node) Node {
 	}
 }
 
+// leftBranch returns the left branch of the code tree.
 func leftBranch(tree Node) Node {
 	codeTree := tree.(*CodeTree)
 	return codeTree.Left
 }
 
+// rightBranch returns the right branch of the code tree.
 func rightBranch(tree Node) Node {
 	codeTree := tree.(*CodeTree)
 	return codeTree.Right
 }
 
+// symbols returns the symbols associated with the node/tree.
 func symbols(tree Node) []string {
 	if isLeaf(tree) {
 		return []string{symbolLeaf(tree)}
@@ -69,6 +81,7 @@ func symbols(tree Node) []string {
 	}
 }
 
+// weight returns the weight associated with the node/tree.
 func weight(tree Node) int {
 	if isLeaf(tree) {
 		return weightLeaf(tree)
@@ -78,6 +91,7 @@ func weight(tree Node) int {
 	}
 }
 
+// decodeBits decodes the given bits using the provided code tree.
 func decodeBits(bits []int, tree Node) []string {
 	var decode func(bits []int, currentBranch Node) []string
 	decode = func(bits []int, currentBranch Node) []string {
@@ -95,6 +109,7 @@ func decodeBits(bits []int, tree Node) []string {
 	return decode(bits, tree)
 }
 
+// chooseBranch selects the appropriate branch based on the given bit value.
 func chooseBranch(bit int, branch Node) Node {
 	if bit == 0 {
 		return leftBranch(branch)
